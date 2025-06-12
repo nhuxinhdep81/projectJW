@@ -8,7 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Constraint(validatedBy = CheckExistUserNameImpl.class)
+@Constraint(validatedBy = CheckExistEmailImpl.class)
 @Target({
         ElementType.ANNOTATION_TYPE,
         ElementType.FIELD,
@@ -16,8 +16,8 @@ import java.lang.annotation.Target;
 })
 
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CheckExistUserName {
-    String message() default "Username đã tồn tại.";
+public @interface CheckExistEmail {
+    String message() default "Email đã tồn tại.";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

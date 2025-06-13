@@ -72,24 +72,33 @@ public class CourseManagerController {
     public String saveAddCourse(@Valid @ModelAttribute("courseDTO") CourseDTO courseDTO,
                                 BindingResult bindingResult,
                                 Model model) {
+        // ❗ Kiểm tra lỗi nhập liệu
         if (bindingResult.hasErrors()) {
             return "form_add_course";
         }
+
+        // ✅ Kiểm tra trùng tên
+        if (courseService.isCourseNameDuplicate(courseDTO.getName())) {
+            bindingResult.rejectValue("name", "error.courseDTO", "Tên khoá học đã tồn tại");
+            return "form_add_course";
+        }
+
         MultipartFile fileImage = courseDTO.getImageFile();
         try {
             if (fileImage != null && !fileImage.isEmpty()) {
-                Map uploadResult = cloudinary.uploader()
-                        .upload(fileImage.getBytes(), ObjectUtils.emptyMap());
+                Map uploadResult = cloudinary.uploader().upload(fileImage.getBytes(), ObjectUtils.emptyMap());
                 String url = uploadResult.get("url").toString();
                 courseDTO.setImage(url);
-                courseService.addOrUpdateCourse(courseDTO);
             }
+            courseService.addOrUpdateCourse(courseDTO);
         } catch (IOException exception) {
-            model.addAttribute("error", "Lỗi upload ảnh: "+ exception.getMessage());
+            model.addAttribute("error", "Lỗi upload ảnh: " + exception.getMessage());
             return "form_add_course";
         }
+
         return "redirect:/course_manager/show";
     }
+
 
     @GetMapping("/edit/{id}")
     public String showFormEditCourse(Model model, @PathVariable("id") int id) {
@@ -114,17 +123,19 @@ public class CourseManagerController {
             return "form_edit_course";
         }
 
-        MultipartFile fileImage = courseDTO.getImageFile();
+        // ✅ Kiểm tra trùng tên với khoá học khác
+        if (courseService.isCourseNameDuplicate(courseDTO.getName(), courseDTO.getId())) {
+            bindingResult.rejectValue("name", "error.courseDTO", "Tên khoá học đã tồn tại");
+            return "form_edit_course";
+        }
 
+        MultipartFile fileImage = courseDTO.getImageFile();
         try {
             if (fileImage != null && !fileImage.isEmpty()) {
-                // Nếu có upload mới → thay thế ảnh cũ
-                Map uploadResult = cloudinary.uploader()
-                        .upload(fileImage.getBytes(), ObjectUtils.emptyMap());
+                Map uploadResult = cloudinary.uploader().upload(fileImage.getBytes(), ObjectUtils.emptyMap());
                 String url = uploadResult.get("url").toString();
                 courseDTO.setImage(url);
             }
-            // Ngược lại → image đã có từ hidden input, không cần set lại
             courseService.addOrUpdateCourse(courseDTO);
         } catch (IOException exception) {
             model.addAttribute("error", "Lỗi upload ảnh: " + exception.getMessage());
@@ -133,6 +144,7 @@ public class CourseManagerController {
 
         return "redirect:/course_manager/show";
     }
+
 
 
     @GetMapping("/delete_course/{id}")

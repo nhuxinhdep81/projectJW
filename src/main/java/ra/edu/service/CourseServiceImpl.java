@@ -43,6 +43,19 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    public boolean isCourseNameDuplicate(String name) {
+        return courseRepository.checkExistCourseName(name) != null;
+    }
+
+    @Override
+    public boolean isCourseNameDuplicate(String name, int id) {
+        Course existing = courseRepository.checkExistCourseName(name);
+        return existing != null && existing.getId() != id;
+    }
+
+
+
+    @Override
     public Course getCourseById(int id) {
         return courseRepository.getCourseById(id);
     }

@@ -16,7 +16,7 @@ public class CourseDTO {
     private Integer id;
 
     @NotBlank(message = "Tên khoá học không được để trống")
-    @CheckExistCourseName
+//    @CheckExistCourseName
     private String name;
 
     @NotNull(message = "Thời lượng không được để trống")

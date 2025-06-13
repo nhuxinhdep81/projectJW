@@ -18,7 +18,8 @@ public interface CourseRepository {
 
     Course getCourseById(int id);
 
-    Course findCourseByName(String name); // hàm tìm kiếm khoá học thoe tên
+    List<Course> searchCourseByName(String keyword, int offset, int limit); // hàm tìm kiếm khoá học thoe tên
+    long countSearchCourseByName(String keyword);
 
     void deleteCourse(Course course);
 }

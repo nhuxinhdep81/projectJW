@@ -18,7 +18,9 @@ public interface CourseService {
 
     Course getCourseById(int id);
 
-    Course findCourseByName(String name); // hàm tìm kiếm khoá học thoe tên
+    List<Course> searchCourseByName(String keyword, int page, int size);
+    long countSearchCourseByName(String keyword);
+
 
     void deleteCourse(Course course);
 

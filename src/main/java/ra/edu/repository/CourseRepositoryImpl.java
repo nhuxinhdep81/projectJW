@@ -56,14 +56,28 @@ public class CourseRepositoryImpl implements CourseRepository {
     }
 
     @Override
-    public Course findCourseByName(String name) {
+    public List<Course> searchCourseByName(String keyword, int offset, int limit) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("FROM Course WHERE name LIKE :name", Course.class)
-                    .setParameter("name", "%" + name + "%")
-                    .setMaxResults(1)
+            return session.createQuery(
+                            "FROM Course WHERE name LIKE :kw ORDER BY id", Course.class)
+                    .setParameter("kw", "%" + keyword + "%")
+                    .setFirstResult(offset)
+                    .setMaxResults(limit)
+                    .list();
+        }
+    }
+
+    @Override
+    public long countSearchCourseByName(String keyword) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery(
+                            "SELECT COUNT(c.id) FROM Course c WHERE c.name LIKE :kw",
+                            Long.class)
+                    .setParameter("kw", "%" + keyword + "%")
                     .uniqueResult();
         }
     }
+
 
     public List<Course> findAllByPage(int page, int pageSize) {
         try (Session session = sessionFactory.openSession()) {

@@ -61,9 +61,16 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public Course findCourseByName(String name){
-        return courseRepository.findCourseByName(name);
+    public List<Course> searchCourseByName(String keyword, int page, int size) {
+        int offset = (page - 1) * size;
+        return courseRepository.searchCourseByName(keyword, offset, size);
     }
+
+    @Override
+    public long countSearchCourseByName(String keyword) {
+        return courseRepository.countSearchCourseByName(keyword);
+    }
+
 
     @Override
     public void deleteCourse(Course course) {

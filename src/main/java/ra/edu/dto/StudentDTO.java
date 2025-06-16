@@ -35,7 +35,6 @@ public class StudentDTO {
 
     @NotBlank(message = "Email không được để trống")
     @Email(regexp = "^[\\w.-]+@[\\w.-]+\\.\\w{2,}$",message = "Email không đúng định dạng")
-//    @Size(max = 100, message = "Email tối đa 100 ký tự")
     @CheckExistEmail
     private String email;
 

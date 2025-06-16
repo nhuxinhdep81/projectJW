@@ -18,13 +18,14 @@ public interface CourseService {
 
     Course getCourseById(int id);
 
-    List<Course> searchCourseByName(String keyword, int page, int size);
-    long countSearchCourseByName(String keyword);
-
+    Course findCourseByName(String name); // hàm tìm kiếm khoá học thoe tên
 
     void deleteCourse(Course course);
 
     List<Course> findAllByPage(int page, int pageSize);
     long countTotalCourses();
 
+    // Thêm vào interface
+    List<Course> searchAndSortCourses(String keyword, String sortBy, String sortDir, int page, int pageSize);
+    long countSearchedCourses(String keyword);
 }

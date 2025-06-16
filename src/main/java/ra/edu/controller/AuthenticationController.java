@@ -22,7 +22,7 @@ public class AuthenticationController {
 
     @GetMapping("/login_form")
     public String loginForm(Model model) {
-        model.addAttribute("loginDTO", new LoginDTO()); // Đổi thành loginDTO
+        model.addAttribute("loginDTO", new LoginDTO());
         return "login";
     }
 
@@ -37,12 +37,12 @@ public class AuthenticationController {
         StudentDTO authenticatedStudent = authenticationService.login(loginDTO.getEmail(), loginDTO.getPassword());
 
         if (authenticatedStudent != null) {
-            session.setAttribute("loggedInUser", authenticatedStudent); // Lưu vào session
+            session.setAttribute("loggedInUser", authenticatedStudent);
 
             if (authenticatedStudent.getRole() != null && authenticatedStudent.getRole()) {
-                return "redirect:/dashboard";
+                return "redirect:/dashboard"; // Admin vẫn về dashboard
             } else {
-                return "redirect:/home_user";
+                return "redirect:/courses/list"; // User về trang danh sách khóa học
             }
         } else {
             model.addAttribute("messageError", "Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
@@ -82,23 +82,15 @@ public class AuthenticationController {
     }
 
 
-
-
-
-    // --- TRANG HOME CHO USER (MỚI) ---
-    @GetMapping("/home_user")
-    public String showHomePage(HttpSession session, Model model) {
-        StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
-
-        if (loggedInUser == null) {
-            return "redirect:/login"; // Nếu chưa đăng nhập, về trang login
-        }
-
-        // Không cần kiểm tra vai trò ở đây vì cả admin và user đều có thể vào home
-        // nhưng luồng đăng nhập đã tách họ ra.
-        model.addAttribute("user", loggedInUser);
-        return "home_user";
-    }
+    // @GetMapping("/list_course")
+    // public String showHomePage(HttpSession session, Model model) {
+    //     StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
+    //     if (loggedInUser == null) {
+    //         return "redirect:/login"; // Nếu chưa đăng nhập, về trang login
+    //     }
+    //     model.addAttribute("user", loggedInUser);
+    //     return "list_course";
+    // }
 
     // --- ĐĂNG XUẤT (ĐÃ CẬP NHẬT) ---
     @GetMapping("/logout")
@@ -106,5 +98,4 @@ public class AuthenticationController {
         session.invalidate();
         return "redirect:/login_form";
     }
-
 }

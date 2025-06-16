@@ -1,6 +1,5 @@
 package ra.edu.repository;
 
-import ra.edu.dto.CourseDTO;
 import ra.edu.entity.Course;
 import jakarta.transaction.Transactional;
 import org.hibernate.Session;
@@ -56,28 +55,14 @@ public class CourseRepositoryImpl implements CourseRepository {
     }
 
     @Override
-    public List<Course> searchCourseByName(String keyword, int offset, int limit) {
+    public Course findCourseByName(String name) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery(
-                            "FROM Course WHERE name LIKE :kw ORDER BY id", Course.class)
-                    .setParameter("kw", "%" + keyword + "%")
-                    .setFirstResult(offset)
-                    .setMaxResults(limit)
-                    .list();
-        }
-    }
-
-    @Override
-    public long countSearchCourseByName(String keyword) {
-        try (Session session = sessionFactory.openSession()) {
-            return session.createQuery(
-                            "SELECT COUNT(c.id) FROM Course c WHERE c.name LIKE :kw",
-                            Long.class)
-                    .setParameter("kw", "%" + keyword + "%")
+            return session.createQuery("FROM Course WHERE name LIKE :name", Course.class)
+                    .setParameter("name", "%" + name + "%")
+                    .setMaxResults(1)
                     .uniqueResult();
         }
     }
-
 
     public List<Course> findAllByPage(int page, int pageSize) {
         try (Session session = sessionFactory.openSession()) {
@@ -95,7 +80,28 @@ public class CourseRepositoryImpl implements CourseRepository {
         }
     }
 
+    @Override
+    public List<Course> searchAndSortCourses(String keyword, String sortBy, String sortDir, int page, int pageSize) {
+        try (Session session = sessionFactory.openSession()) {
+            String hql = "FROM Course WHERE name LIKE :keyword";
+            if (sortBy == null || sortBy.isEmpty()) sortBy = "id";
+            if (sortDir == null || sortDir.isEmpty()) sortDir = "asc";
+            hql += " ORDER BY " + sortBy + " " + sortDir;
+            return session.createQuery(hql, Course.class)
+                    .setParameter("keyword", "%" + (keyword == null ? "" : keyword) + "%")
+                    .setFirstResult((page - 1) * pageSize)
+                    .setMaxResults(pageSize)
+                    .list();
+        }
+    }
 
-
-
+    @Override
+    public long countSearchedCourses(String keyword) {
+        try (Session session = sessionFactory.openSession()) {
+            String hql = "SELECT COUNT(c.id) FROM Course c WHERE c.name LIKE :keyword";
+            return session.createQuery(hql, Long.class)
+                    .setParameter("keyword", "%" + (keyword == null ? "" : keyword) + "%")
+                    .uniqueResult();
+        }
+    }
 }

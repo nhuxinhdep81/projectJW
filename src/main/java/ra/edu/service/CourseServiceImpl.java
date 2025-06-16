@@ -61,16 +61,9 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<Course> searchCourseByName(String keyword, int page, int size) {
-        int offset = (page - 1) * size;
-        return courseRepository.searchCourseByName(keyword, offset, size);
+    public Course findCourseByName(String name){
+        return courseRepository.findCourseByName(name);
     }
-
-    @Override
-    public long countSearchCourseByName(String keyword) {
-        return courseRepository.countSearchCourseByName(keyword);
-    }
-
 
     @Override
     public void deleteCourse(Course course) {
@@ -86,5 +79,15 @@ public class CourseServiceImpl implements CourseService {
         course.setCreateAt(course.getCreateAt());
         course.setImage(courseDTO.getImage());
         return course;
+    }
+
+    @Override
+    public List<Course> searchAndSortCourses(String keyword, String sortBy, String sortDir, int page, int pageSize) {
+        return courseRepository.searchAndSortCourses(keyword, sortBy, sortDir, page, pageSize);
+    }
+
+    @Override
+    public long countSearchedCourses(String keyword) {
+        return courseRepository.countSearchedCourses(keyword);
     }
 }

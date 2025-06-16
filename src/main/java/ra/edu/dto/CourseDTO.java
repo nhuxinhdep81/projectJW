@@ -20,7 +20,6 @@ public class CourseDTO {
 
     @NotNull(message = "Thời lượng không được để trống")
     @Min(value = 1, message = "Thời lượng khoá học phải lớn hơn 0")
-    @Max(value = 365, message = "Thời lượng không được vượt quá 365 ngày")
     private Integer duration;
 
     @NotBlank(message = "Tên giảng viên không được để trống")
@@ -30,6 +29,8 @@ public class CourseDTO {
     private LocalDate createAt = LocalDate.now();
 
     private String image;
+
+    private Boolean status = true;
 
     // Không cần validate ở đây, vì file có thể là optional
     private MultipartFile imageFile;

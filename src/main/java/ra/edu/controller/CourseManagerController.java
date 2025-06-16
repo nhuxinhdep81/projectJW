@@ -37,6 +37,7 @@ public class CourseManagerController {
 
     @GetMapping("/show")
     public String showCourseManager(
+            @RequestParam(name = "confirm", required = false) Integer confirmId,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
@@ -48,6 +49,12 @@ public class CourseManagerController {
         StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
         if (loggedInUser == null || !Boolean.TRUE.equals(loggedInUser.getRole())) {
             return "redirect:/login_form";
+        }
+
+        if (confirmId != null) {
+            Course confirmCourse = courseService.getCourseById(confirmId);
+            model.addAttribute("showConfirmModal", true);
+            model.addAttribute("confirmCourse", confirmCourse);
         }
 
         int pageSize = 5;
@@ -105,6 +112,7 @@ public class CourseManagerController {
         if (courseService.isCourseNameDuplicate(courseDTO.getName())) {
             bindingResult.rejectValue("name", "error.courseDTO", "Tên khoá học đã tồn tại");
 
+            // Phục hồi dữ liệu phân trang để quay về course_manager
             int pageSize = 5;
             long totalCourses = courseService.countTotalCourses();
             int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
@@ -134,7 +142,6 @@ public class CourseManagerController {
 
         return "redirect:/course_manager/show";
     }
-
     @PostMapping("/save_edit_course")
     public String saveEditCourse(@Valid @ModelAttribute("courseDTO") CourseDTO courseDTO,
                                  BindingResult bindingResult,

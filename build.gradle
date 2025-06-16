@@ -65,7 +65,7 @@ dependencies {
     implementation 'jakarta.transaction:jakarta.transaction-api:2.0.1'
 
     // Logging
-    implementation 'ch.qos.logback:logback-classic:1.5.6'
+//    implementation 'ch.qos.logback:logback-classic:1.5.6'
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")

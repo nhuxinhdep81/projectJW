@@ -32,6 +32,8 @@ public class Course {
     @Column(length = 500)
     private String image;
 
+    private Boolean status = true;
+
     // Quan hệ 1-n với bảng Enrollment
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Enrollment> enrollments;

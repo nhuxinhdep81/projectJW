@@ -55,6 +55,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         studentdto.setPassword(student.getPassword());
         studentdto.setCreateAt(student.getCreateAt());
         studentdto.setRole(student.getRole());
+        studentdto.setStatus(student.isStatus());
         return studentdto;
     }
 
@@ -72,6 +73,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         student.setPassword(studentDTO.getPassword());
         student.setCreateAt(studentDTO.getCreateAt());
         student.setRole(studentDTO.getRole());
+        student.setStatus(studentDTO.isStatus());
         return student;
     }
 }

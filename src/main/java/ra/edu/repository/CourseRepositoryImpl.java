@@ -63,7 +63,7 @@ public class CourseRepositoryImpl implements CourseRepository {
                     .uniqueResult();
         }
     }
-
+    @Override
     public List<Course> findAllByPage(int page, int pageSize) {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("FROM Course", Course.class)
@@ -73,6 +73,7 @@ public class CourseRepositoryImpl implements CourseRepository {
         }
     }
 
+    @Override
     public long countTotalCourses() {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("SELECT COUNT(c.id) FROM Course c", Long.class)

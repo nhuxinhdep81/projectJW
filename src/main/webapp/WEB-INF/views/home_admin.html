@@ -62,11 +62,11 @@
     <aside class="w-64 bg-white shadow-sm h-screen">
         <nav class="mt-6">
             <div class="space-y-1">
-                <a href="/dashboard" class="sidebar-item flex items-center px-6 py-3 text-gray-700 bg-blue-50 border-r-3 border-blue-500 font-medium text-blue-700">
+                <a th:href="@{/dashboard}" class="sidebar-item flex items-center px-6 py-3 text-gray-700 bg-blue-50 border-r-3 border-blue-500 font-medium text-blue-700">
                     <i class="fas fa-tachometer-alt mr-3 text-blue-500"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="#" class="sidebar-item flex items-center px-6 py-3 text-gray-700 transition-colors">
+                <a th:href="@{/student_manager/show}" class="sidebar-item flex items-center px-6 py-3 text-gray-700 transition-colors">
                     <i class="fas fa-users mr-3 text-gray-500"></i>
                     <span>Students</span>
                 </a>

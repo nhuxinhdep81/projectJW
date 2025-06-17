@@ -21,23 +21,32 @@ public class EnrollmentUserController {
 
 
     @GetMapping("/list")
-    public String showEnrollments(Model model,
-                                  HttpSession session,
-                                  @RequestParam(name = "page",defaultValue = "1") int page) {
+    public String list(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            Model model, HttpSession session) {
 
-        StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
-        if (loggedInUser == null || Boolean.TRUE.equals(loggedInUser.getRole())) {
+        StudentDTO user = (StudentDTO) session.getAttribute("loggedInUser");
+        if (user == null || Boolean.TRUE.equals(user.getRole())) {
             return "redirect:/login_form";
         }
 
-        var enrollments = enrollmentUserService.getEnrollments(loggedInUser.getId(), page, PAGE_SIZE);
-        long total = enrollmentUserService.getTotalEnrollments(loggedInUser.getId());
-        int totalPages = (int) Math.ceil((double) total / PAGE_SIZE);
+        final int SIZE = 5;
+
+        var enrollments = enrollmentUserService.searchEnrollments(
+                user.getId(), keyword, status, page, SIZE);
+
+        long total = enrollmentUserService.countSearchEnrollments(
+                user.getId(), keyword, status);
 
         model.addAttribute("enrollments", enrollments);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("status", status);
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalPages", (int) Math.ceil((double) total / SIZE));
 
         return "list_enrollment";
     }
+
 }

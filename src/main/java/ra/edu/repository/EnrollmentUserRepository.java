@@ -10,4 +10,11 @@ public interface EnrollmentUserRepository {
 
     /** Đếm tổng số bản ghi (để tính totalPages) */
     long countByStudentId(Integer studentId);
+
+
+    List<Enrollment> searchEnrollments(Integer studentId, String keyword, Enrollment.Status status,
+                                       int page, int pageSize);
+
+    long countSearchEnrollments(Integer studentId, String keyword,
+                                Enrollment.Status status);
 }

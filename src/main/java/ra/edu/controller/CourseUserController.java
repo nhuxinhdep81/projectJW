@@ -19,7 +19,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/courses")
-public class EnrollmentController {
+public class CourseUserController {
 
     @Autowired
     private CourseService courseService;

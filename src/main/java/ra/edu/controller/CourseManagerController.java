@@ -43,6 +43,7 @@ public class CourseManagerController {
             @RequestParam(name = "sortDir", defaultValue = "asc") String sortDir,
             @RequestParam(name = "add", required = false) String add,
             @RequestParam(name = "edit", required = false) Integer editId,
+            @RequestParam(name = "confirm", required = false) Integer confirmId, // Thêm parameter này
             HttpSession session, Model model) {
 
         StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
@@ -62,11 +63,13 @@ public class CourseManagerController {
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("sortDir", sortDir);
 
-        // Modal code giữ nguyên như cũ
+        // Modal add course
         if (add != null) {
             model.addAttribute("showAddModal", true);
             model.addAttribute("courseDTO", new CourseDTO());
         }
+
+        // Modal edit course
         if (editId != null) {
             Course course = courseService.getCourseById(editId);
             CourseDTO courseDTO = new CourseDTO();
@@ -78,6 +81,13 @@ public class CourseManagerController {
             courseDTO.setImage(course.getImage());
             model.addAttribute("showEditModal", true);
             model.addAttribute("courseDTO", courseDTO);
+        }
+
+        // Modal confirm delete - THÊM PHẦN NÀY
+        if (confirmId != null) {
+            Course course = courseService.getCourseById(confirmId);
+            model.addAttribute("showConfirmModal", true);
+            model.addAttribute("confirmCourse", course);
         }
 
         return "course_manager";

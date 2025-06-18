@@ -1,11 +1,13 @@
 package ra.edu.repository;
 
+
 import jakarta.transaction.Transactional;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ra.edu.entity.Student ;
+import org.hibernate.query.Query;
 
 import java.util.List;
 
@@ -20,14 +22,14 @@ public class StudentRepositoryImpl implements StudentRepository {
     @Override
     public List<Student> findAll() {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("from Student").list();
+            return session.createQuery("from Student where role = false ").list();
         }
     }
 
     @Override
     public List<Student > findAllByPage(int page, int pageSize) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("FROM Student ORDER BY id", Student .class)
+            return session.createQuery("FROM Student where role = false ORDER BY id ", Student .class)
                     .setFirstResult((page - 1) * pageSize)
                     .setMaxResults(pageSize)
                     .list();
@@ -37,8 +39,71 @@ public class StudentRepositoryImpl implements StudentRepository {
     @Override
     public long countTotalStudents() {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("SELECT COUNT(s.id) FROM Student s", Long.class)
+            return session.createQuery("SELECT COUNT(s.id) FROM Student s where role = false ", Long.class)
                     .uniqueResult();
         }
     }
+
+    @Override
+    public Student findById(int id) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.get(Student.class, id);
+        }
+    }
+
+    @Override
+    public void lockAndUnlockStudent(int id) {
+    try (Session session = sessionFactory.openSession()) {
+        Student student = session.get(Student.class,id);
+        session.beginTransaction();
+        student.setStatus(!student.isStatus());
+        session.update(student);
+        session.getTransaction().commit();
+    }
+    }
+
+    @Override
+    public List<Student> findAll(int page, int size, String sortField, String sortDir, String keyword) {
+        // Chỉ cho phép sắp xếp theo các trường hợp lệ
+        String validSortField = switch (sortField) {
+            case "id", "name", "email" -> sortField;
+            default -> "id";
+        };
+        String validSortDir = "desc".equalsIgnoreCase(sortDir) ? "desc" : "asc";
+
+        try (Session session = sessionFactory.openSession()) {
+            String hql = "FROM Student s WHERE s.role = false";
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                hql += " AND (lower(s.name) LIKE :kw OR lower(s.email) LIKE :kw OR str(s.id) LIKE :kw)";
+            }
+            hql += " ORDER BY s." + validSortField + " " + validSortDir;
+            var query = session.createQuery(hql, Student.class);
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                query.setParameter("kw", "%" + keyword.toLowerCase() + "%");
+            }
+            query.setFirstResult((page - 1) * size);
+            query.setMaxResults(size);
+            return query.list();
+        }
+    }
+
+    @Override
+    public int count(String keyword) {
+        try (Session session = sessionFactory.openSession()) {
+            String hql = "SELECT COUNT(s.id) FROM Student s WHERE s.role = false";
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                hql += " AND (lower(s.name) LIKE :kw OR lower(s.email) LIKE :kw OR str(s.id) LIKE :kw)";
+            }
+            var query = session.createQuery(hql, Long.class);
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                query.setParameter("kw", "%" + keyword.toLowerCase() + "%");
+            }
+            return query.uniqueResult().intValue();
+        }
+    }
+
+
+
+
+
 }

@@ -4,9 +4,8 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ra.edu.dto.StudentDTO;
 import ra.edu.entity.Student;
 import ra.edu.service.StudentService;
@@ -21,9 +20,13 @@ public class StudentController {
     private StudentService studentService;
 
     @GetMapping("/show")
-    public String showStudentManager(Model model,
-                                     HttpSession session,
-                                     @RequestParam(name = "page", defaultValue = "1") int page) {
+    public String showStudents(
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "sortField", defaultValue = "id") String sortField,
+            @RequestParam(name = "sortDir", defaultValue = "asc") String sortDir,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            Model model,
+            HttpSession session) {
 
         // 1. Kiểm tra đăng nhập & quyền
         StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
@@ -31,24 +34,46 @@ public class StudentController {
             return "redirect:/login_form";
         }
 
-        // 2. Cấu hình phân trang
-        final int pageSize = 8;
-        long totalStudents = studentService.countTotalStudents();
-        long totalPages   = (long) Math.ceil((double) totalStudents / pageSize);
+        final int pageSize = 5;
 
-        // Bảo vệ khi người dùng gõ page “ngoài vùng phủ sóng”
-        if (page < 1)           page = 1;
-        if (page > totalPages)  page = (int) totalPages;
+        /* Đếm trước để biết tổng trang */
+        int total = studentService.countStudents(keyword);
+        int totalPages = (int) Math.ceil(total / (double) pageSize);
 
-        // 3. Lấy dữ liệu trang hiện tại
-        List<Student> students = studentService.findAllByPage(page, pageSize);
+        /* Bảo đảm luôn ≥ 1 để Thymeleaf không tạo sequence “1,0” */
+        if (totalPages < 1) totalPages = 1;
 
-        // 4. Đẩy lên view
+        /* Ghìm trang hiện tại trong khoảng hợp lệ */
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+
+        /* Lấy danh sách sau khi đã hiệu chỉnh page */
+        List<Student> students =
+                studentService.findStudents(page, pageSize, sortField, sortDir, keyword);
+
         model.addAttribute("students", students);
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages",  totalPages);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("keyword", keyword == null ? "" : keyword);
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortDir", sortDir);
+        model.addAttribute("reverseSortDir", sortDir.equals("asc") ? "desc" : "asc");
 
         return "student_manager";
     }
 
+
+    @GetMapping("/lock_student/{id}")
+    public String lockStudent(@PathVariable("id") int id,
+                              @RequestParam(name = "page", defaultValue = "1") int page,
+                              @RequestParam(name = "keyword", required = false) String keyword,
+                              RedirectAttributes redirectAttributes) {
+        studentService.lockAndUnlockStudent(id);
+        redirectAttributes.addAttribute("page", page);
+        redirectAttributes.addAttribute("keyword", keyword);
+        return "redirect:/student_manager/show";
+    }
+
 }
+
+

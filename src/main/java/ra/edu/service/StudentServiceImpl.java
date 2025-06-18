@@ -27,4 +27,26 @@ public class StudentServiceImpl implements StudentService {
     public long countTotalStudents() {
         return studentRepository.countTotalStudents();
     }
+
+    @Override
+    public Student findById(int id) {
+        return studentRepository.findById(id);
+    }
+
+    @Override
+    public void lockAndUnlockStudent(int id) {
+        studentRepository.lockAndUnlockStudent(id);
+    }
+
+    @Override
+    public List<Student> findStudents(int page, int size, String sortField, String sortDir, String keyword) {
+        return studentRepository.findAll(page, size, sortField, sortDir, keyword);
+    }
+
+    @Override
+    public int countStudents(String keyword) {
+        return studentRepository.count(keyword);
+    }
+
+
 }

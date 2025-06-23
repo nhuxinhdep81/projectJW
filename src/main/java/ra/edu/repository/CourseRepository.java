@@ -21,6 +21,7 @@ public interface CourseRepository {
     Course findCourseByName(String name);
 
     void deleteCourse(Course course);
+    // Thêm hàm kiểm tra số lượng đơn CONFIRM của khoá học
 
     List<Course> searchAndSortCourses(String keyword, String sortBy, String sortDir, int page, int pageSize);
     long countSearchedCourses(String keyword);

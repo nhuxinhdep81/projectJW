@@ -11,10 +11,12 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ra.edu.dto.CourseDTO;
 import ra.edu.dto.StudentDTO;
 import ra.edu.entity.Course;
 import ra.edu.service.CourseService;
+import ra.edu.service.EnrollmentService;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,6 +37,9 @@ public class CourseManagerController {
     @Autowired
     private CourseService courseService;
 
+    @Autowired
+    private EnrollmentService enrollmentService;
+
     @GetMapping("/show")
     public String showCourseManager(
             @RequestParam(name = "page", defaultValue = "1") int page,
@@ -43,7 +48,7 @@ public class CourseManagerController {
             @RequestParam(name = "sortDir", defaultValue = "asc") String sortDir,
             @RequestParam(name = "add", required = false) String add,
             @RequestParam(name = "edit", required = false) Integer editId,
-            @RequestParam(name = "confirm", required = false) Integer confirmId, // Thêm parameter này
+            @RequestParam(name = "confirm", required = false) Integer confirmId,
             HttpSession session, Model model) {
 
         StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
@@ -52,14 +57,24 @@ public class CourseManagerController {
         }
 
         int pageSize = 5;
-        List<Course> courses = courseService.searchAndSortCourses(keyword, sortBy, sortDir, page, pageSize);
+
+        // Trim keyword
+        keyword = (keyword == null) ? "" : keyword.trim();
+
         long totalCourses = courseService.countSearchedCourses(keyword);
-        int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
+        int totalPages = (totalCourses == 0) ? 0 : (int) Math.ceil((double) totalCourses / pageSize);
+
+        if (page < 1) page = 1;
+        if (page > totalPages && totalPages > 0) page = totalPages;
+
+        List<Course> courses = (totalCourses > 0)
+                ? courseService.searchAndSortCourses(keyword, sortBy, sortDir, page, pageSize)
+                : List.of();
 
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("listCourse", courses);
-        model.addAttribute("keyword", keyword == null ? "" : keyword);
+        model.addAttribute("keyword", keyword);
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("sortDir", sortDir);
 
@@ -83,7 +98,7 @@ public class CourseManagerController {
             model.addAttribute("courseDTO", courseDTO);
         }
 
-        // Modal confirm delete - THÊM PHẦN NÀY
+        // Modal confirm delete
         if (confirmId != null) {
             Course course = courseService.getCourseById(confirmId);
             model.addAttribute("showConfirmModal", true);
@@ -93,16 +108,23 @@ public class CourseManagerController {
         return "course_manager";
     }
 
+    // Validate ảnh khi thêm mới
     @PostMapping("/save")
     public String saveAddCourse(@Valid @ModelAttribute("courseDTO") CourseDTO courseDTO,
                                 BindingResult bindingResult,
                                 @RequestParam(name = "page", defaultValue = "1") int page,
                                 Model model) {
+        MultipartFile fileImage = courseDTO.getImageFile();
+
+        // Nếu không có file ảnh, báo lỗi
+        if (fileImage == null || fileImage.isEmpty()) {
+            bindingResult.rejectValue("imageFile", "error.courseDTO", "Ảnh không được để trống");
+        }
+
         if (bindingResult.hasErrors()) {
-            // Bổ sung lại dữ liệu phân trang cho trang course_manager
             int pageSize = 5;
             long totalCourses = courseService.countTotalCourses();
-            int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
+            int totalPages = (totalCourses == 0) ? 0 : (int) Math.ceil((double) totalCourses / pageSize);
 
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", totalPages);
@@ -110,14 +132,13 @@ public class CourseManagerController {
             model.addAttribute("showAddModal", true);
             return "course_manager";
         }
-
 
         if (courseService.isCourseNameDuplicate(courseDTO.getName())) {
             bindingResult.rejectValue("name", "error.courseDTO", "Tên khoá học đã tồn tại");
 
             int pageSize = 5;
             long totalCourses = courseService.countTotalCourses();
-            int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
+            int totalPages = (totalCourses == 0) ? 0 : (int) Math.ceil((double) totalCourses / pageSize);
 
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", totalPages);
@@ -127,14 +148,11 @@ public class CourseManagerController {
             return "course_manager";
         }
 
-
-        MultipartFile fileImage = courseDTO.getImageFile();
         try {
-            if (fileImage != null && !fileImage.isEmpty()) {
-                Map uploadResult = cloudinary.uploader().upload(fileImage.getBytes(), ObjectUtils.emptyMap());
-                String url = uploadResult.get("url").toString();
-                courseDTO.setImage(url);
-            }
+            Map uploadResult = cloudinary.uploader().upload(fileImage.getBytes(), ObjectUtils.emptyMap());
+            String url = uploadResult.get("url").toString();
+            courseDTO.setImage(url);
+
             courseService.addOrUpdateCourse(courseDTO);
         } catch (IOException exception) {
             model.addAttribute("error", "Lỗi upload ảnh: " + exception.getMessage());
@@ -145,6 +163,7 @@ public class CourseManagerController {
         return "redirect:/course_manager/show";
     }
 
+    // Edit: Giữ lại ảnh cũ nếu không chọn ảnh mới
     @PostMapping("/save_edit_course")
     public String saveEditCourse(@Valid @ModelAttribute("courseDTO") CourseDTO courseDTO,
                                  BindingResult bindingResult,
@@ -153,7 +172,7 @@ public class CourseManagerController {
         if (bindingResult.hasErrors()) {
             int pageSize = 5;
             long totalCourses = courseService.countTotalCourses();
-            int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
+            int totalPages = (totalCourses == 0) ? 0 : (int) Math.ceil((double) totalCourses / pageSize);
 
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", totalPages);
@@ -165,10 +184,9 @@ public class CourseManagerController {
         if (courseService.isCourseNameDuplicate(courseDTO.getName(), courseDTO.getId())) {
             bindingResult.rejectValue("name", "error.courseDTO", "Tên khoá học đã tồn tại");
 
-            // Phục hồi dữ liệu
             int pageSize = 5;
             long totalCourses = courseService.countTotalCourses();
-            int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
+            int totalPages = (totalCourses == 0) ? 0 : (int) Math.ceil((double) totalCourses / pageSize);
 
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", totalPages);
@@ -178,14 +196,15 @@ public class CourseManagerController {
             return "course_manager";
         }
 
-
         MultipartFile fileImage = courseDTO.getImageFile();
         try {
             if (fileImage != null && !fileImage.isEmpty()) {
+                // Nếu có file ảnh mới
                 Map uploadResult = cloudinary.uploader().upload(fileImage.getBytes(), ObjectUtils.emptyMap());
                 String url = uploadResult.get("url").toString();
                 courseDTO.setImage(url);
             }
+            // Nếu không có file ảnh mới, giữ nguyên giá trị image từ hidden field
             courseService.addOrUpdateCourse(courseDTO);
         } catch (IOException exception) {
             model.addAttribute("error", "Lỗi upload ảnh: " + exception.getMessage());
@@ -196,9 +215,16 @@ public class CourseManagerController {
         return "redirect:/course_manager/show";
     }
 
-    @GetMapping("/delete_course/{id}")
-    public String deleteCourse(@PathVariable("id") int id) {
-        courseService.deleteCourse(courseService.getCourseById(id));
+    @PostMapping("/delete_course/{id}")
+    public String deleteCourse(@PathVariable("id") int id, RedirectAttributes redirectAttributes) {
+        Course course = courseService.getCourseById(id);
+        long confirmedCount = enrollmentService.countConfirmedEnrollmentsByCourseId(id);
+        if (confirmedCount > 0) {
+            redirectAttributes.addFlashAttribute("error", "Khoá học không thể xoá vì đã có học sinh theo học");
+        } else {
+            courseService.deleteCourse(course);
+            redirectAttributes.addFlashAttribute("success", "Xoá khoá học thành công");
+        }
         return "redirect:/course_manager/show";
     }
 }

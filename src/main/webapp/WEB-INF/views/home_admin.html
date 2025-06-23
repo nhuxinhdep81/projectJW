@@ -16,7 +16,6 @@
         .stat-card {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         }
-        /* Custom scrollbar styles */
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -32,11 +31,16 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        .course-image {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
-<!-- Header -->
-
+<!-- Header (unchanged) -->
 <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
     <div class="flex items-center justify-between">
         <div class="flex items-center">
@@ -74,7 +78,7 @@
 </header>
 
 <div class="flex">
-    <!-- Sidebar -->
+    <!-- Sidebar (unchanged) -->
     <aside class="w-64 bg-white shadow-sm h-screen">
         <nav class="mt-6">
             <div class="space-y-1">
@@ -90,7 +94,7 @@
                     <i class="fas fa-book mr-3 text-gray-500"></i>
                     <span>Courses</span>
                 </a>
-                <a href="#" class="sidebar-item flex items-center px-6 py-3 text-gray-700 transition-colors">
+                <a th:href="@{/enrollment_manager/show}" class="sidebar-item flex items-center px-6 py-3 text-gray-700 transition-colors">
                     <i class="fas fa-user-plus mr-3 text-gray-500"></i>
                     <span>Enrollment</span>
                 </a>
@@ -137,6 +141,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Student statistics by course -->
             <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900">Student statistics by course</h3>
@@ -156,7 +161,8 @@
                         <tr th:each="row : ${studentByCourse}">
                             <td class="px-6 py-4 text-sm text-gray-900" th:text="'C00' + ${row[0].id}">C0001</td>
                             <td class="px-6 py-4">
-                                <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+                                <img th:if="${row[0].image != null}" th:src="${row[0].image}" alt="Course Image" class="course-image"/>
+                                <div th:unless="${row[0].image != null}" class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
                                     <span class="text-white text-xs font-bold" th:text="${#strings.substring(row[0].name, 0, 1)}">H</span>
                                 </div>
                             </td>
@@ -168,6 +174,7 @@
                     </table>
                 </div>
             </div>
+            <!-- Top 5 course best seller -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900">Top 5 course best seller</h3>
@@ -176,15 +183,18 @@
                 <div class="p-6 space-y-4">
                     <div th:each="row : ${top5Courses}" class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                            <img th:if="${row[0].image != null}" th:src="${row[0].image}" alt="Course Image" class="course-image"/>
+                            <div th:unless="${row[0].image != null}" class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
                                 <span class="text-white text-xs font-bold" th:text="${#strings.substring(row[0].name, 0, 1)}"></span>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-900" th:text="${row[0].name}"></p>
-                                <p class="text-xs text-gray-500">Student</p>
                             </div>
                         </div>
-                        <span class="text-sm font-semibold text-gray-900" th:text="${row[1]}"></span>
+                        <div class="text-right">
+                            <span class="text-sm font-semibold text-gray-900" th:text="${row[1]}"></span>
+                            <p class="text-xs text-gray-500">Student</p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -42,4 +42,29 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public List<Object[]> top5CoursesByEnrollment() {
         return enrollmentRepository.top5CoursesByEnrollment();
     }
+
+    @Override
+    public List<Enrollment> filterAndSearch(String status, String courseName, int page, int pageSize) {
+        return enrollmentRepository.filterAndSearch(status, courseName, page, pageSize);
+    }
+    @Override
+    public long countFilteredAndSearched(String status, String courseName) {
+        return enrollmentRepository.countFilteredAndSearched(status, courseName);
+    }
+
+    @Override
+    public void acceptEnrollment(int id) {
+        enrollmentRepository.acceptEnrollment(id);
+    }
+
+    @Override
+    public void deniedEnrollment(int id) {
+        enrollmentRepository.deniedEnrollment(id);
+    }
+
+    @Override
+    public long countConfirmedEnrollmentsByCourseId(int courseId) {
+        return enrollmentRepository.countConfirmedEnrollmentsByCourseId(courseId);
+    }
+
 }

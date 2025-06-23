@@ -6,6 +6,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ra.edu.entity.Enrollment;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class CourseRepositoryImpl implements CourseRepository {
     @Override
     public List<Course> findAll() {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("from Course").list();
+            return session.createQuery("from Course where status = true", Course.class).list();
         }
     }
 
@@ -31,12 +32,22 @@ public class CourseRepositoryImpl implements CourseRepository {
             session.getTransaction().commit();
         }
     }
+// xoá cứng course
+//    @Override
+//    public void deleteCourse(Course course) {
+//        try (Session session = sessionFactory.openSession()) {
+//            session.beginTransaction();
+//            session.remove(course);
+//            session.getTransaction().commit();
+//        }
+//    }
 
     @Override
     public void deleteCourse(Course course) {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.remove(course);
+            course.setStatus(false); // cập nhật trạng thái đã xoá mềm
+            session.update(course);
             session.getTransaction().commit();
         }
     }
@@ -66,7 +77,7 @@ public class CourseRepositoryImpl implements CourseRepository {
     @Override
     public List<Course> findAllByPage(int page, int pageSize) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("FROM Course", Course.class)
+            return session.createQuery("FROM Course where status = true ", Course.class)
                     .setFirstResult((page - 1) * pageSize)
                     .setMaxResults(pageSize)
                     .list();
@@ -76,7 +87,7 @@ public class CourseRepositoryImpl implements CourseRepository {
     @Override
     public long countTotalCourses() {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("SELECT COUNT(c.id) FROM Course c", Long.class)
+            return session.createQuery("SELECT COUNT(c.id) FROM Course c where c.status = true", Long.class)
                     .uniqueResult();
         }
     }
@@ -84,7 +95,7 @@ public class CourseRepositoryImpl implements CourseRepository {
     @Override
     public List<Course> searchAndSortCourses(String keyword, String sortBy, String sortDir, int page, int pageSize) {
         try (Session session = sessionFactory.openSession()) {
-            String hql = "FROM Course WHERE name LIKE :keyword";
+            String hql = "FROM Course WHERE name LIKE :keyword and status = true";
             if (sortBy == null || sortBy.isEmpty()) sortBy = "id";
             if (sortDir == null || sortDir.isEmpty()) sortDir = "asc";
             hql += " ORDER BY " + sortBy + " " + sortDir;
@@ -99,7 +110,7 @@ public class CourseRepositoryImpl implements CourseRepository {
     @Override
     public long countSearchedCourses(String keyword) {
         try (Session session = sessionFactory.openSession()) {
-            String hql = "SELECT COUNT(c.id) FROM Course c WHERE c.name LIKE :keyword";
+            String hql = "SELECT COUNT(c.id) FROM Course c WHERE c.name LIKE :keyword and status = true";
             return session.createQuery(hql, Long.class)
                     .setParameter("keyword", "%" + (keyword == null ? "" : keyword) + "%")
                     .uniqueResult();

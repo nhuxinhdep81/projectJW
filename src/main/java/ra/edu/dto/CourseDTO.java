@@ -23,7 +23,7 @@ public class CourseDTO {
     private Integer duration;
 
     @NotBlank(message = "Tên giảng viên không được để trống")
-    @Size(min = 3, max = 50, message = "Tên giảng viên phải từ 3 đến 50 ký tự")
+//    @Size(min = 3, max = 50, message = "Tên giảng viên phải từ 3 đến 50 ký tự")
     private String instructor;
 
     private LocalDate createAt = LocalDate.now();

@@ -42,12 +42,12 @@ public class StudentDTO {
     private Boolean sex; // true = Nam, false = Nữ
 
     @NotBlank(message = "Số điện thoại không được để trống ")
-    @Pattern(regexp = "^(0|\\+84)[0-9]{9}$", message = "Số điện thoại không hợp lệ")
+//    @Pattern(regexp = "^(0|\\+84)[0-9]{9}$", message = "Số điện thoại không hợp lệ")
     @CheckExistPhone
     private String phone;
 
 
-    @NotBlank(message = "Mật khẩu không được để trống")
+//    @NotBlank(message = "Mật khẩu không được để trống")
     @Size(min = 6, max = 40, message = "Mật khẩu phải từ 6 đến 40 ký tự")
     private String password;
 

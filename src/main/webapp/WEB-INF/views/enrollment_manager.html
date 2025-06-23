@@ -1,0 +1,258 @@
+    <!DOCTYPE html>
+    <html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Enrollment Manager</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <style>
+            .sidebar-item:hover {
+                background-color: #f8fafc;
+                border-radius: 8px;
+            }
+            .sidebar-item.active {
+                background-color: #e0f2fe;
+                border-radius: 8px;
+                color: #0369a1;
+            }
+            .status-badge {
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                padding: 4px 8px;
+                border-radius: 4px;
+            }
+            .status-waiting {
+                background-color: #fef3c7;
+                color: #d97706;
+            }
+            .status-confirm {
+                background-color: #dcfce7;
+                color: #16a34a;
+            }
+            .status-cancel {
+                background-color: #fee2e2;
+                color: #dc2626;
+            }
+            .status-denied {
+                background-color: #fee2e2;
+                color: #dc2626;
+            }
+            .action-btn {
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .action-accept {
+                background-color: #10b981;
+                color: white;
+            }
+            .action-accept:hover {
+                background-color: #059669;
+            }
+            .action-decline {
+                background-color: #f59e0b;
+                color: white;
+            }
+            .action-decline:hover {
+                background-color: #d97706;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="text-2xl font-bold">
+                    <img class="h-8 inline-block" src="https://res.cloudinary.com/dlz6sulzj/image/upload/v1749632988/819bc04f5546ebd7a87a7a8ebe401a97208935eb_wjwly8.png">
+                </div>
+            </div>
+            <div class="flex-1 max-w-md mx-8">
+                <div class="relative">
+                    <input type="text" placeholder="Type to search"
+                           class="w-full px-4 py-2 pl-10 pr-4 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <i class="fa-solid fa-envelope text-gray-600 text-lg cursor-pointer"></i>
+                    <span class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                </div>
+                <div class="relative">
+                    <i class="fas fa-bell text-gray-600 text-lg cursor-pointer"></i>
+                    <span class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                </div>
+                <div class="flex items-center space-x-2 cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face"
+                         alt="User" class="w-8 h-8 rounded-full">
+                    <a th:href="@{/logout}" class="text-sm font-medium text-gray-700">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-sm h-screen">
+            <nav class="mt-6">
+                <div class="space-y-1">
+                    <a th:href="@{/dashboard}" class="sidebar-item flex items-center px-6 py-3 text-gray-700 transition-colors">
+                        <i class="fas fa-tachometer-alt mr-3 text-gray-500"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a th:href="@{/student_manager/show}" class="sidebar-item flex items-center px-6 py-3 text-gray-700 transition-colors">
+                        <i class="fas fa-users mr-3 text-gray-500"></i>
+                        <span>Students</span>
+                    </a>
+                    <a th:href="@{/course_manager/show}" class="sidebar-item flex items-center px-6 py-3 text-gray-700 transition-colors">
+                        <i class="fas fa-book mr-3 text-gray-500"></i>
+                        <span>Courses</span>
+                    </a>
+                    <a th:href="@{/enrollment_manager/show}" class="sidebar-item flex items-center px-6 py-3 text-gray-700 bg-blue-50 border-r-3 border-blue-500 font-medium text-blue-700">
+                        <i class="fas fa-user-plus mr-3 text-blue-500"></i>
+                        <span>Enrollment</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <!-- Page Header -->
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-semibold text-gray-800">Enrollment Manager</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- ... phần trong <main> ... -->
+                    <br>
+                    <br>
+                    <form th:action="@{/enrollment_manager/show}" method="get" id="filterForm" class="flex items-center space-x-4">
+                        <div class="relative">
+                            <select class="border rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white" name="status" onchange="this.form.submit()">
+                                <option value="">Select By Status</option>
+                                <option value="WAITING" th:selected="${status == 'WAITING'}">Waiting</option>
+                                <option value="CONFIRM" th:selected="${status == 'CONFIRM'}">Confirm</option>
+                                <option value="CANCEL" th:selected="${status == 'CANCEL'}">Cancel</option>
+                                <option value="DENIED" th:selected="${status == 'DENIED'}">Denied</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-3 top-3 text-gray-400 text-xs pointer-events-none"></i>
+                        </div>
+                        <div class="relative">
+                            <input type="text" name="courseName" placeholder="Search by course name"
+                                   th:value="${courseName}"
+                                   class="pl-8 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
+                        </div>
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                            Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrollment ID</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Name</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registered Date</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+
+                    <tr th:if="${#lists.isEmpty(enrollmentList)}">
+                        <td colspan="7" class="py-6 text-center text-gray-500 italic">
+                            Không tìm thấy khoá học phù hợp
+                        </td>
+                    </tr>
+                    <tr th:each="list : ${enrollmentList}" class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" th:text=" 'E00' + ${list.id}">E0001</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"th:text="${list.student.name}">Alice Johnson</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" th:text="${list.course.name}">Basic Web Programming</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" th:text="${#temporals.format(list.registeredAt, 'dd/MM/yyyy')}">05/05/2025</td>
+                        <!-- Badge theo trạng thái -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                        <span th:if="${list.status == T(ra.edu.entity.Enrollment.Status).WAITING}"
+                              class="inline-flex items-center  py-0.5 text-xs font-medium text-yellow-500">
+                            WAITING
+                        </span>
+                            <span th:if="${list.status == T(ra.edu.entity.Enrollment.Status).CONFIRM}"
+                                  class="inline-flex items-center  py-0.5 text-xs font-medium text-green-600">
+                            CONFIRM
+                        </span>
+                            <span th:if="${list.status == T(ra.edu.entity.Enrollment.Status).DENIED}"
+                                  class="inline-flex items-center  py-0.5 text-xs font-medium text-red-600">
+                            DENIED
+                        </span>
+                            <span th:if="${list.status == T(ra.edu.entity.Enrollment.Status).CANCEL}"
+                                  class="inline-flex items-center  py-0.5 text-xs font-medium text-red-600">
+                            CANCEL
+                        </span>
+                        </td>
+                        <td th:if="${list.status == T(ra.edu.entity.Enrollment.Status).WAITING and list.course.status == true}" class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex space-x-2">
+                                <a th:href="@{/enrollment_manager/accept_enrollment/{id}(id=${list.id},page=${currentPage},status=${status},courseName=${courseName})}">
+                                    <button  class="border-2 border-green-500 bg-green-100 text-green-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-green-200 transition-colors">CONFIRM</button>
+                                </a>
+                                <a th:href="@{/enrollment_manager/denied_enrollment/{id}(id=${list.id},page=${currentPage},status=${status},courseName=${courseName})}">
+                                    <button
+                                            class="border-2 border-orange-500 bg-orange-100 text-orange-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-200 transition-colors"
+                                    >DECLINE</button>
+                                </a>
+                            </div>
+                        </td>
+                        <td th:unless="${list.status == T(ra.edu.entity.Enrollment.Status).WAITING and list.course.status == true}" class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex space-x-2">
+                                <span>-</span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-center mt-8 space-x-1"
+            th:if="${totalPages > 1}">
+                <a th:if="${currentPage > 1}"
+                   th:href="@{/enrollment_manager/show(page=${currentPage - 1}, status=${status}, courseName=${courseName})}"
+                   class="px-3 py-2 text-sm text-gray-600 hover:text-blue-600">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+
+                <span th:each="pageNum : ${#numbers.sequence(1, totalPages)}">
+                 <a th:href="@{/enrollment_manager/show(page=${pageNum}, status=${status}, courseName=${courseName})}" th:text="${pageNum}"
+                        th:classappend="${pageNum == currentPage} ? 'bg-blue-500 text-white' : 'text-gray-600 hover:text-blue-600'"
+                        class="px-3 py-2 text-sm rounded">
+                    </a>
+                </span>
+
+                <a th:if="${currentPage < totalPages}"
+                   th:href="@{/enrollment_manager/show(page=${currentPage + 1}, status=${status}, courseName=${courseName})}"
+                   class="px-3 py-2 text-sm text-gray-600 hover:text-blue-600">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </main>
+    </div>
+    </body>
+    </html>

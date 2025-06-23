@@ -14,4 +14,7 @@ public interface EnrollmentUserRepository {
 
     long countSearchEnrollments(Integer studentId, String keyword,
                                 Enrollment.Status status);
+
+    void cancelEnrollment(int id);
+
 }

@@ -43,6 +43,11 @@ public class EnrollmentUserServiceImpl implements EnrollmentUserService {
         return enrollmentUserRepository.countSearchEnrollments(studentId, keyword, st);
     }
 
+    @Override
+    public void cancelEnrollment(int id) {
+        enrollmentUserRepository.cancelEnrollment(id);
+    }
+
     /* ---------- Tiện ích ---------- */
     private Enrollment.Status parseStatus(String status) {
         if (!StringUtils.hasText(status)) return null;

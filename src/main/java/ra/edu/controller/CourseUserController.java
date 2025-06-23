@@ -36,9 +36,22 @@ public class CourseUserController {
             Model model) {
 
         int pageSize = 5;
+
+
+        // Trước khi truyền keyword cho Service/Repo, hãy trim nó:
+        keyword = (keyword == null) ? "" : keyword.trim();
+
+
         List<Course> courses = courseService.searchAndSortCourses(keyword, "id", "asc", page, pageSize);
         long totalCourses = courseService.countSearchedCourses(keyword);
         int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
+
+        /* Bảo đảm luôn ≥ 1 để Thymeleaf không tạo sequence “1,0” */
+        if (totalPages < 1) totalPages = 1;
+
+        /* Ghìm trang hiện tại trong khoảng hợp lệ */
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
 
         StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
         List<Integer> registeredCourseIds = null;

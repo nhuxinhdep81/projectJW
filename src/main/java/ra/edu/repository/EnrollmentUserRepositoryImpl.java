@@ -115,4 +115,15 @@ public class EnrollmentUserRepositoryImpl implements EnrollmentUserRepository {
 
         return query.uniqueResult();
     }
+
+    @Override
+    public void cancelEnrollment(int id) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            Enrollment enrollment = session.get(Enrollment.class, id);
+            enrollment.setStatus(Enrollment.Status.CANCEL);
+            session.update(enrollment);
+            session.getTransaction().commit();
+        }
+    }
 }

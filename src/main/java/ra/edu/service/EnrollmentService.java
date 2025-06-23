@@ -12,4 +12,15 @@ public interface EnrollmentService {
     long countTotalEnrollments();
     List<Object[]> countStudentByCourse();
     List<Object[]> top5CoursesByEnrollment();
+
+
+    List<Enrollment> filterAndSearch(String status, String courseName, int page, int pageSize);
+    long countFilteredAndSearched(String status, String courseName);
+
+    void acceptEnrollment(int id);
+
+    void deniedEnrollment(int id);
+
+    long countConfirmedEnrollmentsByCourseId(int courseId);
+
 }

@@ -25,14 +25,6 @@ public class AuthenticationController {
     @Autowired
     private AuthenticationService authenticationService;
 
-
-    @Autowired
-    private CourseService courseService;
-    @Autowired
-    private StudentService studentService;
-    @Autowired
-    private EnrollmentService enrollmentService;
-
     @GetMapping("/login_form")
     public String loginForm(Model model) {
         model.addAttribute("loginDTO", new LoginDTO());
@@ -89,35 +81,7 @@ public class AuthenticationController {
         return "redirect:/login_form";
     }
 
-    // --- TRANG DASHBOARD CHO ADMIN (ĐÃ CẬP NHẬT) ---
-    @GetMapping("/dashboard")
-    public String showDashboard(HttpSession session, Model model) {
-        StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
-        if (loggedInUser == null || !Boolean.TRUE.equals(loggedInUser.getRole())) {
-            return "redirect:/login_form";
-        }
 
-        // Tổng số học viên (chỉ student, không tính admin)
-        int totalStudent = studentService.countStudents("");
-        // Tổng số khóa học
-        long totalCourse = courseService.countTotalCourses();
-        // Tổng số lượt đăng ký (được xác nhận)
-        long totalEnrollment = enrollmentService.countTotalEnrollments();
-
-        // Thống kê học viên theo từng khóa
-        List<Object[]> studentByCourse = enrollmentService.countStudentByCourse();
-
-        // Top 5 khóa học đông sinh viên nhất
-        List<Object[]> top5Courses = enrollmentService.top5CoursesByEnrollment();
-
-        model.addAttribute("totalStudent", totalStudent);
-        model.addAttribute("totalCourse", totalCourse);
-        model.addAttribute("totalEnrollment", totalEnrollment);
-        model.addAttribute("studentByCourse", studentByCourse);
-        model.addAttribute("top5Courses", top5Courses);
-
-        return "home_admin";
-    }
 
 
     // @GetMapping("/list_course")

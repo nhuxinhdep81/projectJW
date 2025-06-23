@@ -22,6 +22,7 @@ public interface CourseService {
 
     void deleteCourse(Course course);
 
+
     List<Course> findAllByPage(int page, int pageSize);
     long countTotalCourses();
 

@@ -1,79 +1,155 @@
 package ra.edu.controller;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import ra.edu.dto.ChangePasswordDTO;
+import ra.edu.dto.UpdateProfileDTO;
 import ra.edu.dto.StudentDTO;
 import ra.edu.entity.Student;
 import ra.edu.service.StudentService;
 
-import java.util.List;
+import java.time.LocalDate;
 
 @Controller
-@RequestMapping("/student_manager")
+@RequestMapping("/profile")
 public class StudentController {
 
     @Autowired
     private StudentService studentService;
 
-    @GetMapping("/show")
-    public String showStudents(
-            @RequestParam(name = "page", defaultValue = "1") int page,
-            @RequestParam(name = "sortField", defaultValue = "id") String sortField,
-            @RequestParam(name = "sortDir", defaultValue = "asc") String sortDir,
-            @RequestParam(name = "keyword", required = false) String keyword,
-            Model model,
-            HttpSession session) {
-
-        // 1. Kiểm tra đăng nhập & quyền
+    // Hiển thị trang profile
+    @GetMapping
+    public String showProfilePage(
+            @RequestParam(name = "showPasswordModal", required = false) Boolean showPasswordModal,
+            HttpSession session,
+            Model model) {
         StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
-        if (loggedInUser == null || !Boolean.TRUE.equals(loggedInUser.getRole())) {
+        if (loggedInUser == null) {
             return "redirect:/login_form";
         }
 
-        final int pageSize = 5;
+        if (loggedInUser.getRole() == true){
+            return "redirect:/login_form";
+        }
+        Student student = studentService.findById(loggedInUser.getId());
 
-        /* Đếm trước để biết tổng trang */
-        int total = studentService.countStudents(keyword);
-        int totalPages = (int) Math.ceil(total / (double) pageSize);
 
-        /* Bảo đảm luôn ≥ 1 để Thymeleaf không tạo sequence “1,0” */
-        if (totalPages < 1) totalPages = 1;
 
-        /* Ghìm trang hiện tại trong khoảng hợp lệ */
-        if (page < 1) page = 1;
-        if (page > totalPages) page = totalPages;
+        UpdateProfileDTO profileDTO = new UpdateProfileDTO();
+        profileDTO.setName(student.getName());
+        profileDTO.setPhone(student.getPhone());
+        profileDTO.setEmail(student.getEmail());
+        profileDTO.setDob(student.getDob().toString());
 
-        /* Lấy danh sách sau khi đã hiệu chỉnh page */
-        List<Student> students =
-                studentService.findStudents(page, pageSize, sortField, sortDir, keyword);
+        // Nếu có lỗi đổi mật khẩu mang qua redirect, giữ lại đối tượng và lỗi
+        if (!model.containsAttribute("changePasswordDTO")) {
+            model.addAttribute("changePasswordDTO", new ChangePasswordDTO());
+        }
+        // Đảm bảo bindingResult hiển thị khi có lỗi đổi mật khẩu
+        if (!model.containsAttribute("org.springframework.validation.BindingResult.changePasswordDTO")) {
+            model.addAttribute("org.springframework.validation.BindingResult.changePasswordDTO", null);
+        }
 
-        model.addAttribute("students", students);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", totalPages);
-        model.addAttribute("keyword", keyword == null ? "" : keyword);
-        model.addAttribute("sortField", sortField);
-        model.addAttribute("sortDir", sortDir);
-        model.addAttribute("reverseSortDir", sortDir.equals("asc") ? "desc" : "asc");
+        model.addAttribute("profileDTO", profileDTO);
+        model.addAttribute("gender", student.getSex() ? "Male" : "Female");
+        model.addAttribute("showPasswordModal", Boolean.TRUE.equals(showPasswordModal) || model.asMap().containsKey("showPasswordModal"));
 
-        return "student_manager";
+        return "profile";
     }
 
+    // Xử lý cập nhật thông tin
+    @PostMapping("/update")
+    public String updateProfile(@Valid @ModelAttribute("profileDTO") UpdateProfileDTO profileDTO,
+                                BindingResult bindingResult,
+                                HttpSession session,
+                                RedirectAttributes redirectAttributes,
+                                Model model) {
+        StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return "redirect:/login_form";
+        }
 
-    @GetMapping("/lock_student/{id}")
-    public String lockStudent(@PathVariable("id") int id,
-                              @RequestParam(name = "page", defaultValue = "1") int page,
-                              @RequestParam(name = "keyword", required = false) String keyword,
-                              RedirectAttributes redirectAttributes) {
-        studentService.lockAndUnlockStudent(id);
-        redirectAttributes.addAttribute("page", page);
-        redirectAttributes.addAttribute("keyword", keyword);
-        return "redirect:/student_manager/show";
+        // Check duplicate email, phone (ngoại trừ của chính mình)
+        boolean duplicateEmail = studentService.isEmailDuplicate(profileDTO.getEmail(), loggedInUser.getId());
+        boolean duplicatePhone = studentService.isPhoneDuplicate(profileDTO.getPhone(), loggedInUser.getId());
+
+        if (duplicateEmail) {
+            bindingResult.rejectValue("email", "error.profileDTO", "Email này đã được sử dụng");
+        }
+        if (duplicatePhone) {
+            bindingResult.rejectValue("phone", "error.profileDTO", "Số điện thoại này đã được sử dụng");
+        }
+
+        if (bindingResult.hasErrors()) {
+            Student student = studentService.findById(loggedInUser.getId());
+            model.addAttribute("profileDTO", profileDTO);
+            model.addAttribute("gender", student.getSex() ? "Male" : "Female");
+            // Để modal không bật lên khi update thông tin
+            model.addAttribute("showPasswordModal", false);
+            return "profile";
+        }
+
+        Student student = studentService.findById(loggedInUser.getId());
+        student.setName(profileDTO.getName());
+        student.setPhone(profileDTO.getPhone());
+        student.setEmail(profileDTO.getEmail());
+        student.setDob(LocalDate.parse(profileDTO.getDob()));
+
+        studentService.updateStudent(student);
+
+        // Cập nhật lại thông tin trong session
+        loggedInUser.setName(profileDTO.getName());
+        loggedInUser.setPhone(profileDTO.getPhone());
+        loggedInUser.setEmail(profileDTO.getEmail());
+        loggedInUser.setDob(LocalDate.parse(profileDTO.getDob()));
+        session.setAttribute("loggedInUser", loggedInUser);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin thành công!");
+        return "redirect:/profile";
     }
 
+    // Xử lý đổi mật khẩu
+    @PostMapping("/change-password")
+    public String changePassword(@Valid @ModelAttribute("changePasswordDTO") ChangePasswordDTO changePasswordDTO,
+                                 BindingResult bindingResult,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        StudentDTO loggedInUser = (StudentDTO) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return "redirect:/login_form";
+        }
+
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.changePasswordDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("changePasswordDTO", changePasswordDTO);
+            redirectAttributes.addFlashAttribute("showPasswordModal", true); // Hiển thị modal khi có lỗi
+            return "redirect:/profile";
+        }
+
+        // Kiểm tra mật khẩu cũ
+        if (!studentService.checkPassword(loggedInUser.getId(), changePasswordDTO.getOldPassword())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu cũ không đúng");
+            redirectAttributes.addFlashAttribute("showPasswordModal", true);
+            return "redirect:/profile";
+        }
+
+        // Kiểm tra mật khẩu mới và xác nhận mật khẩu
+        if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Xác nhận mật khẩu không khớp");
+            redirectAttributes.addFlashAttribute("showPasswordModal", true);
+            return "redirect:/profile";
+        }
+
+        // Cập nhật mật khẩu mới
+        studentService.changePassword(loggedInUser.getId(), changePasswordDTO.getNewPassword());
+
+        redirectAttributes.addFlashAttribute("successMessage", "Đổi mật khẩu thành công!");
+        return "redirect:/profile";
+    }
 }
-
-

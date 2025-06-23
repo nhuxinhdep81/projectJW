@@ -53,8 +53,6 @@ public class CourseServiceImpl implements CourseService {
         return existing != null && existing.getId() != id;
     }
 
-
-
     @Override
     public Course getCourseById(int id) {
         return courseRepository.getCourseById(id);
@@ -69,6 +67,8 @@ public class CourseServiceImpl implements CourseService {
     public void deleteCourse(Course course) {
         courseRepository.deleteCourse(course);
     }
+
+
 
     private Course convertCourseDTOToCourse(CourseDTO courseDTO) {
         Course course = new Course();
